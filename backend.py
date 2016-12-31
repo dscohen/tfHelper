@@ -2333,7 +2333,7 @@ def time_loss(s1, s2, mask_t, dropout=None):
         drop_loss = tf.mul(dropout, mask_t)
         drop_loss = tf.reduce_sum(drop_loss, reduction_indices=1) / tf.cast(length, tf.float32)
         tf.scalar_summary('drop_loss', tf.reduce_mean(drop_loss))
-        mse = mse + drop_loss
+        mse = mse + mse*drop_loss
 
     return tf.reduce_mean(mse)
 
