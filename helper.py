@@ -80,7 +80,7 @@ def prune(lst, pruned=None):
     return mask[pruned[0]], pruned[0]
 
 
-def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, limit=1600,max_len=None):
+def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, limit=1600):
     """
 
     :param data_item: list of data to batch, outputs in order of input
@@ -141,9 +141,6 @@ def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, 
 
         return pruned_batches, pruned_list[1:]
 
-    def make_div_2(list_in):
-        assert isinstance(list_in, int), 'splitter must run on ints'
-        return list_in + 1 if list_in % 2 != 0 else list_in
 
     assert isinstance(data_in,
                       list), 'deprecated use, assure data_in is in list, even if list if of length 1: [data_in]'
@@ -159,9 +156,7 @@ def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, 
         pruned_list = []
         for data_item in data_in:
             inp = data_item[i:i + batch_size]
-            if max_len is None:
-                max_len = max(map(len, inp))
-                max_len = make_div_2(max_len)
+            max_len = max(map(len, inp))
             if vocab:
                 vocab.convert_to_embed_idx(inp)
             inp = pad_sequences(inp, maxlen=max_len, padding='post')
