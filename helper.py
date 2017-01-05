@@ -61,6 +61,22 @@ def printProgress (iteration, total, t,time, prefix = '', suffix = '', decimals 
     return t
 
 
+def blockshaped(arr, maxlen):
+    """
+    Return list of arr [batch X maxlen]
+
+    """
+
+    divide_points = [i * maxlen for i in range(1, int(math.ceil(1. * arr.shape[1] / maxlen)) + 1)]
+    old_point = 0
+    new_arrs = []
+    print divide_points,maxlen
+    for div in divide_points:
+        new_arrs.append(arr[:, old_point:div])
+        old_point = div
+    return new_arrs
+
+
 def prune(lst, pruned=None):
     """
     assumes input of [data,mask]
@@ -80,7 +96,7 @@ def prune(lst, pruned=None):
     return mask[pruned[0]], pruned[0]
 
 
-def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, limit=1600):
+def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, limit=1600, use_vocab=[]):
     """
 
     :param data_item: list of data to batch, outputs in order of input
@@ -141,6 +157,9 @@ def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, 
 
         return pruned_batches, pruned_list[1:]
 
+    def make_div_2(list_in):
+        assert isinstance(list_in, int), 'splitter must run on ints'
+        return list_in + 1 if list_in % 2 != 0 else list_in
 
     assert isinstance(data_in,
                       list), 'deprecated use, assure data_in is in list, even if list if of length 1: [data_in]'
@@ -154,11 +173,14 @@ def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, 
 
         data_item_output = []
         pruned_list = []
-        for data_item in data_in:
+        for z, data_item in enumerate(data_in):
             inp = data_item[i:i + batch_size]
             max_len = max(map(len, inp))
+            max_len = make_div_2(max_len)
             if vocab:
-                vocab.convert_to_embed_idx(inp)
+                # only convert items we want (documents are embedded already)
+                if len(use_vocab) == 0 or use_vocab[z]:
+                    vocab.convert_to_embed_idx(inp)
             inp = pad_sequences(inp, maxlen=max_len, padding='post')
             mask = np.ma.make_mask(inp, copy=True, dtype=np.int32).astype(int)
             # lengths = np.expand_dims(np.sum(mask, axis=-1), -1)
@@ -178,18 +200,3 @@ def next_batch(data_in, targets=None, batch_size=128, random=False, vocab=None, 
         i = (i + batch_size) % len(data_item)
         debug_cnt += 1
         yield data_item_output, output, pruned_list
-
-
-def blockshaped(arr, maxlen):
-    """
-    Return list of arr [batch X maxlen]
-
-    """
-
-    divide_points = [i * maxlen for i in range(1, int(math.ceil(1. * arr.shape[1] / maxlen)) + 1)]
-    old_point = 0
-    new_arrs = []
-    for div in divide_points:
-        new_arrs.append(arr[:, old_point:div])
-        old_point = div
-    return new_arrs

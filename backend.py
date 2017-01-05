@@ -2329,7 +2329,6 @@ def time_loss(s1, s2, mask_t, dropout=None):
 
     if dropout is not None:
         # mask_t should be 2 dimensionsA [s1,s2,s3,...,sn]
-        dropout = tf.squeeze(dropout, squeeze_dims=[-1])
         drop_loss = tf.mul(dropout, mask_t)
         drop_loss = tf.reduce_sum(drop_loss, reduction_indices=1) / tf.cast(length, tf.float32)
         tf.scalar_summary('drop_loss', tf.reduce_mean(drop_loss))
